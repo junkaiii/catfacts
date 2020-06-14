@@ -4,7 +4,10 @@ import { withStyles } from "@material-ui/core/styles";
 import CardComponent from "../card/card";
 import axios from "axios";
 
-interface Props {}
+interface Props {
+  doRefreshState: boolean;
+  setDoRefreshState: (value: boolean) => void;
+}
 
 interface State {
   cards: Card[];
@@ -16,11 +19,6 @@ interface Card {
   upvotes: number;
   userUpvoted: boolean;
   text: string;
-}
-
-function fetchFacts() {
-  let facts = axios.get("https://cat-fact.herokuapp.com/facts");
-  return facts;
 }
 
 /**
@@ -48,9 +46,9 @@ class Cards extends Component<Props, State> {
     loading: true,
   };
 
-  async componentDidMount() {
+  fetchFacts = async () => {
     try {
-      let response = await fetchFacts();
+      let response = await axios.get("https://cat-fact.herokuapp.com/facts");
       let factArray = response.data.all.map(
         (fact: {
           upvotes: number;
@@ -71,6 +69,21 @@ class Cards extends Component<Props, State> {
       this.setState({ cards: shuffle(factArray).slice(0, 5), loading: false });
     } catch (e) {
       console.log(e.message);
+    }
+  };
+
+  async componentDidMount() {
+    this.fetchFacts();
+  }
+
+  async componentDidUpdate(prevState: Props) {
+    if (
+      this.props.doRefreshState !== prevState.doRefreshState &&
+      this.props.doRefreshState === true
+    ) {
+      this.setState({ loading: true });
+      this.fetchFacts();
+      this.props.setDoRefreshState(false);
     }
   }
 

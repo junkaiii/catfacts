@@ -2,30 +2,30 @@ import React, { Component } from "react";
 import { Grid, CircularProgress } from "@material-ui/core";
 import { withStyles } from "@material-ui/core/styles";
 import CardComponent from "../card/card";
-import axios from "axios";
+import FactsService from "../../services/FactsService";
 
-interface Props {
+export type Props = {
   doRefreshState: boolean;
   setDoRefreshState: (value: boolean) => void;
-}
+};
 
-interface State {
-  cards: Card[];
+export type State = {
+  cards: CardType[];
   loading: boolean;
-}
+};
 
-interface Card {
+export type CardType = {
   source: string;
   upvotes: number;
   userUpvoted: boolean;
   text: string;
-}
+};
 
 /**
  * Shuffles array in place. ES6 version
  * @param {Array} a items An array containing the items.
  */
-function shuffle(a: Card[]) {
+function shuffle(a: CardType[]) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
@@ -40,40 +40,15 @@ const styles = () => ({
   },
 });
 
-class Cards extends Component<Props, State> {
+export class Cards extends Component<Props, State> {
   state: Readonly<State> = {
     cards: [],
     loading: true,
   };
 
-  fetchFacts = async () => {
-    try {
-      let response = await axios.get("https://cat-fact.herokuapp.com/facts");
-      let factArray = response.data.all.map(
-        (fact: {
-          upvotes: number;
-          userUpvoted: boolean;
-          text: string;
-          user: { name: { first: string; last: string } };
-        }) => {
-          return {
-            upvotes: fact.upvotes,
-            userUpvoted: fact.userUpvoted,
-            text: fact.text,
-            source: fact.user
-              ? `${fact.user.name.first} ${fact.user.name.last}`
-              : "Nobody",
-          };
-        }
-      );
-      this.setState({ cards: shuffle(factArray).slice(0, 5), loading: false });
-    } catch (e) {
-      console.log(e.message);
-    }
-  };
-
   async componentDidMount() {
-    this.fetchFacts();
+    const facts = await FactsService.fetchFacts();
+    this.setState({ cards: shuffle(facts).slice(0, 5), loading: false });
   }
 
   async componentDidUpdate(prevState: Props) {
@@ -82,7 +57,8 @@ class Cards extends Component<Props, State> {
       this.props.doRefreshState === true
     ) {
       this.setState({ loading: true });
-      this.fetchFacts();
+      const facts = await FactsService.fetchFacts();
+      this.setState({ cards: shuffle(facts).slice(0, 5), loading: false });
       this.props.setDoRefreshState(false);
     }
   }

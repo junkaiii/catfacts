@@ -11,21 +11,13 @@ import {
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import Dotdotdot from "react-dotdotdot";
 
-interface Props {
+export type Props = {
   index: number;
   source: string;
   upvotes: number;
   userUpvoted: boolean;
   text: string;
-}
-
-interface Props {
-  index: number;
-  source: string;
-  upvotes: number;
-  userUpvoted: boolean;
-  text: string;
-}
+};
 
 const useStyles = makeStyles({
   title: {
